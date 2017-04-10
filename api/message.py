@@ -30,6 +30,9 @@ class Message(object):
         logging.debug("Matched emoticons: {}".format(emoticons))
         raw_list = [item[1: -1] for item in emoticons]
 
+        # Checking if the emoticon is supported is not required per description
+        # but nice to have. This probably can also be loaded from a persistent
+        # datastore, and saved as a global context.
         return [item for item in raw_list if self._is_valid_emoticon(item)]
 
     @property

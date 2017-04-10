@@ -50,7 +50,12 @@ during a short amount of time, and reaching out to an external endpoint could be
 
 Also, the web scrapping could consume a lot of time depending on the state of the endpoint, and
 regex matching could take a lot of cpu/memory resource, these can be considered to move to worker
-processes, and communicate with the api service thru a message queue.
+processes, and communicate with the api service thru a message queue. Ideally, the title scrapping
+part can be made async instead of blocking until done, when the title is retrieved, a callback can
+be triggered to pass that information back.
 
 More tests should also be added to achieve better test coverage. External service mocking is also
 needed for integration testing.
+
+More importantly, load testing of the API service also needs to be implemented to measure the performance
+metrics and bottlenecks, so that we can further identity places to continue to optimize.
