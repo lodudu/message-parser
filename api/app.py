@@ -16,9 +16,12 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
-@app.route("/parsed_message")
+@app.route("/parsed_message", methods=['POST'])
 def hello():
-    message = request.args.get('message', '')
+    # message = request.args.get('message', '')
+    content = request.json
+    message = content.get('message', '')
+    # logger.debug("got request content: {}, message {}".format(content, message))
     msg = Message(message)
 
     result = {}

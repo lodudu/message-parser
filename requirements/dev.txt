@@ -1,4 +1,3 @@
 -r prod.txt
 pytest
 mock
-flask-cli

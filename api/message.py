@@ -1,6 +1,8 @@
 import re
+import os
 import logging
 import requests
+import eventlet
 
 from lxml import html
 
@@ -8,6 +10,9 @@ logger = logging.getLogger(__name__)
 REGEX_USERNAME = '@[a-zA-Z0-9_]+'
 REGEX_EMOTICON = '\([a-zA-Z]+\)'
 REGEX_URL = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+GET_TIMEOUT = int(os.environ.get('GET_TIMEOUT', 10))
+
+eventlet.monkey_patch()
 
 
 class Message(object):
@@ -53,13 +58,15 @@ class Message(object):
     def _get_title(self, link):
         """Retrieve title for given link"""
         title = None
-        res = requests.get(link)
-        if res.status_code == 200:
-            tree = html.fromstring(res.content)
-            title = tree.xpath('//title/text()')[0]
-            logger.info("Title for {}: {}".format(link, title))
-        else:
-            logger.error("Unable to get title for link {}".format(link))
+
+        with eventlet.Timeout(GET_TIMEOUT):
+            res = requests.get(link)
+            if res.status_code == 200:
+                tree = html.fromstring(res.content)
+                title = tree.xpath('//title/text()')[0]
+                logger.info("Title for {}: {}".format(link, title))
+            else:
+                logger.error("Unable to get title for link {}".format(link))
 
         return title
 
@@ -69,10 +76,12 @@ class Message(object):
 
     def _get_supported_emoticons(self):
         """Get the list of supported emoticons from hipchat.com/emoticons"""
-        res = requests.get("https://www.hipchat.com/emoticons")
-        tree = html.fromstring(res.content)
-        raw_list = tree.xpath('//div[@class="emoticon-block"]')
-        supported_emoticons = [item.attrib['data-clipboard-text'][1:-1] for item in raw_list]
+        supported_emoticons = []
+        with eventlet.Timeout(GET_TIMEOUT):
+            res = requests.get("https://www.hipchat.com/emoticons")
+            tree = html.fromstring(res.content)
+            raw_list = tree.xpath('//div[@class="emoticon-block"]')
+            supported_emoticons = [item.attrib['data-clipboard-text'][1:-1] for item in raw_list]
 
         logger.debug("All supported emoticons: {}".format(supported_emoticons))
         return supported_emoticons
